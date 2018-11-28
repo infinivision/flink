@@ -167,6 +167,13 @@ public abstract class ResultPartition<T> implements ResultPartitionWriter<T> {
 		this.typeSerializer = Preconditions.checkNotNull(typeSerializer);
 	}
 
+	/**
+	 * Whether this partition is released, e.g. all subpartitions are consumed or task is cancelled.
+	 */
+	public boolean isReleased() {
+		return isReleased.get();
+	}
+
 	@Override
 	public void setParentTask(AbstractInvokable parentTask) {
 		this.parentTask = parentTask;

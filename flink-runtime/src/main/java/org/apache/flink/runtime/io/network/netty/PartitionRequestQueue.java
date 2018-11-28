@@ -43,6 +43,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -61,6 +62,9 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
 
 	/** The readers which are already enqueued available for transferring data. */
 	private final ArrayDeque<NetworkSequenceViewReader> availableReaders = new ArrayDeque<>();
+
+	/** The readers are marked as to be closed, waiting for confirmation from writer side */
+	private final Set<NetworkSequenceViewReader> readersToClose = new HashSet<>();
 
 	/** All the readers created for the consumers' partition requests. */
 	private final ConcurrentMap<InputChannelID, NetworkSequenceViewReader> allReaders = new ConcurrentHashMap<>();
@@ -90,12 +94,7 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
 		// TODO This could potentially have a bad performance impact as in the
 		// worst case (network consumes faster than the producer) each buffer
 		// will trigger a separate event loop task being scheduled.
-		ctx.executor().execute(new Runnable() {
-			@Override
-			public void run() {
-				ctx.pipeline().fireUserEventTriggered(reader);
-			}
-		});
+		ctx.executor().execute(() -> ctx.pipeline().fireUserEventTriggered(reader));
 	}
 
 	/**
@@ -157,9 +156,12 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
 			ctx.channel().close();
 		}
 
-		//It is really necessary for blocking mode, and for pipelined mode, the task will be canceled to
-		// release resources for downstream failure.
-		releaseAllResources();
+		LOG.info("Close all {} readers pending for close.", readersToClose.size());
+		for (NetworkSequenceViewReader reader : readersToClose) {
+			reader.notifySubpartitionConsumed();
+			reader.releaseAllResources();
+			markAsReleased(reader.getReceiverId());
+		}
 	}
 
 	/**
@@ -196,27 +198,21 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
 			InputChannelID toCancel = (InputChannelID) msg;
 			if (released.contains(toCancel)) {
 				return;
-			} else {
-				markAsReleased(toCancel);
 			}
 
-			// The view to cancel may not be created before if the partition request is arrived later
-			// in the case of master canceling downstream task to send cancel request
-			NetworkSequenceViewReader toReleasedReader = allReaders.remove(toCancel);
-			if (toReleasedReader != null) {
-				toReleasedReader.releaseAllResources();
-			} else {
-				LOG.warn("The view for this receiver {} has not been created or has been canceled before!", toCancel);
-			}
-
-			// Remove the view from the available queue.
+			// Cancel the request for the input channel
 			int size = availableReaders.size();
 			for (int i = 0; i < size; i++) {
 				NetworkSequenceViewReader reader = pollAvailableReader();
-				if (!reader.getReceiverId().equals(toCancel)) {
+				if (reader.getReceiverId().equals(toCancel)) {
+					reader.releaseAllResources();
+					markAsReleased(reader.getReceiverId());
+				} else {
 					registerAvailableReader(reader);
 				}
 			}
+
+			allReaders.remove(toCancel);
 		} else {
 			ctx.fireUserEventTriggered(msg);
 		}
@@ -276,10 +272,8 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
 						next.buffersInBacklog());
 
 					if (isEndOfPartitionEvent(next.buffer())) {
-						reader.notifySubpartitionConsumed();
-						reader.releaseAllResources();
-
-						markAsReleased(reader.getReceiverId());
+						// Don't close them now, wait for write's close request
+						readersToClose.add(reader);
 					}
 
 					// Write and flush and wait until this is done before
@@ -347,6 +341,7 @@ class PartitionRequestQueue extends ChannelInboundHandlerAdapter {
 		}
 
 		availableReaders.clear();
+		readersToClose.clear();
 		allReaders.clear();
 	}
 

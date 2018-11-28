@@ -248,4 +248,11 @@ public interface TaskExecutorGateway extends RpcGateway {
 	 * @return
 	 */
 	CompletableFuture<Tuple2<String, String>> requestTmLogAndStdoutFileName(@RpcTimeout Time timeout);
+	CompletableFuture<TransientBlobKey> requestFileUpload(FileType fileType, @RpcTimeout Time timeout);
+
+	/**
+	 * Checks whether this can be released. This cannot be released if there're unconsumed result partitions
+	 * @return whether this can be released
+	 */
+	boolean canBeReleased();
 }

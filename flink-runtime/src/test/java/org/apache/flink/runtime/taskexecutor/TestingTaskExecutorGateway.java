@@ -186,6 +186,11 @@ public class TestingTaskExecutorGateway implements TaskExecutorGateway {
 	}
 
 	@Override
+	public boolean canBeReleased() {
+		return true;
+	}
+
+	@Override
 	public String getAddress() {
 		return address;
 	}

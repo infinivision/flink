@@ -26,6 +26,9 @@ import org.apache.flink.runtime.resourcemanager.placementconstraint.SlotTag;
 import org.apache.flink.runtime.taskmanager.Task;
 import org.apache.flink.util.Preconditions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,6 +56,7 @@ import java.util.Map;
  * can be set to releasing indicating that it can be freed once it becomes empty.
  */
 public class TaskSlot {
+	private static final Logger LOG = LoggerFactory.getLogger(TaskSlot.class);
 
 	/** Index of the task slot. */
 	private final int index;
@@ -62,6 +66,9 @@ public class TaskSlot {
 
 	/** Tasks running in this slot. */
 	private final Map<ExecutionAttemptID, Task> tasks;
+
+	/** Finished tasks waiting for their result partitions to be fully consumed */
+	private List<Task> lingeringTasks = new ArrayList<>();
 
 	/** State of this slot. */
 	private TaskSlotState state;
@@ -216,8 +223,39 @@ public class TaskSlot {
 	 * @return The removed task if there was any; otherwise null.
 	 */
 	public Task remove(ExecutionAttemptID executionAttemptId) {
-		return tasks.remove(executionAttemptId);
+		final Task taskToRemove = tasks.remove(executionAttemptId);
+		if (!taskToRemove.canBeReleased()) {
+			LOG.debug("Remove Task {} and add it to lingering tasks.", taskToRemove.getTaskInfo().getTaskNameWithSubtasks());
+			lingeringTasks.add(taskToRemove);
+		} else {
+			LOG.debug("Remove Task {}.", taskToRemove.getTaskInfo().getTaskNameWithSubtasks());
+		}
+		return taskToRemove;
 	}
+
+	/**
+	 * This can be safely released if all tasks can be released.
+	 */
+	public boolean canBeReleased() {
+		for (Task task : tasks.values()) {
+			if (!task.canBeReleased()) {
+				LOG.debug("Task slot {} can not be released due to remaining tasks.", this.getAllocationId());
+				return false;
+			}
+		}
+		for (Iterator<Task> iterator = lingeringTasks.iterator(); iterator.hasNext(); ) {
+			Task task = iterator.next();
+			if (!task.canBeReleased()) {
+				LOG.debug("Task slot {} can not be released due to lingering tasks.", this.getAllocationId());
+				return false;
+			} else {
+				iterator.remove();
+			}
+		}
+		LOG.debug("Task slot {} can be released.", this.getAllocationId());
+		return true;
+	}
+
 
 	/**
 	 * Removes all tasks from this task slot.

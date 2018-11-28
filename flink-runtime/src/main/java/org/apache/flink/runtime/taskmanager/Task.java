@@ -84,6 +84,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -271,7 +272,9 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 	/** atomic flag that makes sure the invokable is canceled exactly once upon error. */
 	private final AtomicBoolean invokableHasBeenCanceled;
 
-	/** The invokable of this task, if initialized. */
+	/** The invokable of this task, if initialized. All accesses must copy the reference and
+	 * check for null, as this field is cleared as part of the disposal logic. */
+	@Nullable
 	private volatile AbstractInvokable invokable;
 
 	/** The current execution state of the task. */
@@ -496,6 +499,12 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 
 	public InputSplitProvider getInputSplitProvider() {
 		return inputSplitProvider;
+	}
+
+	@Nullable
+	@VisibleForTesting
+	AbstractInvokable getInvokable() {
+		return invokable;
 	}
 
 	// ------------------------------------------------------------------------
@@ -959,6 +968,20 @@ public class Task implements Runnable, TaskActions, CheckpointListener {
 
 			++counter;
 		}
+	}
+
+	/**
+	 * This task can only be safely released after all produced partitions are consumed.
+	 */
+	public boolean canBeReleased() {
+		for (ResultPartition producedPartition : producedPartitions) {
+			if (!producedPartition.isReleased()) {
+				LOG.debug("Task can NOT be released, execution ID {}", getExecutionId());
+				return false;
+			}
+		}
+		LOG.debug("Task can be released, execution ID {}", getExecutionId());
+		return true;
 	}
 
 	private ClassLoader createUserCodeClassloader() throws Exception {
