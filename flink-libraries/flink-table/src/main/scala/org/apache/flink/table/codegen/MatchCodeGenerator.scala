@@ -351,6 +351,7 @@ class MatchCodeGenerator(
       j"""
         public class $funcName extends ${functionClass.getCanonicalName} {
           ${ctx.reuseMemberCode()}
+          ${ctx.reuseFieldCode()}
 
           public $funcName(Object[] references) throws Exception {
             ${ctx.reuseInitCode()}
@@ -367,7 +368,6 @@ class MatchCodeGenerator(
             ${reusePatternLists()}
             ${reuseClassifierLists()}
             ${ctx.reusePerRecordCode()}
-            ${ctx.reuseFieldCode()}
             ${ctx.reuseInputUnboxingCode()}
             $bodyCode
           }
