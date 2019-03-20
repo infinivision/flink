@@ -23,17 +23,35 @@ import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.streaming.connectors.kafka.v2.KafkaBaseOutputFormat;
 import org.apache.flink.streaming.connectors.kafka.v2.KafkaConverter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 import java.util.Properties;
 
 /** Kafka011 OutputFormat. */
 public class Kafka011OutputFormat extends KafkaBaseOutputFormat {
 	private static final long serialVersionUID = 1L;
 
+	private static final Logger LOG = LoggerFactory.getLogger(Kafka011OutputFormat.class);
+
 	public Kafka011OutputFormat(
 			String defaultTopicId,
 			KafkaConverter serializationSchema,
 			Properties producerConfig) {
 		super(defaultTopicId, serializationSchema, producerConfig);
+	}
+
+	@Override
+	public void close() throws IOException {
+		LOG.info("Kafka011OutputFormat will be closed");
+		super.close();
+
+		flush();
+
+		if (this.producer != null) {
+			producer.close();
+		}
 	}
 
 	@Override

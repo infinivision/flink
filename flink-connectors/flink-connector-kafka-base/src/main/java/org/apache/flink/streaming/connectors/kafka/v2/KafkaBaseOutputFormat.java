@@ -24,7 +24,6 @@ import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.java.ClosureCleaner;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.metrics.MetricGroup;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducerBase;
 import org.apache.flink.streaming.connectors.kafka.internals.metrics.KafkaMetricWrapper;
 import org.apache.flink.streaming.connectors.kafka.v2.common.Syncable;
 import org.apache.flink.streaming.connectors.kafka.v2.common.TupleRichOutputFormat;
@@ -58,7 +57,7 @@ import static java.util.Objects.requireNonNull;
 
 /** Kafka OutputFormat base class. */
 public abstract class KafkaBaseOutputFormat extends TupleRichOutputFormat implements Syncable {
-	private static final Logger LOG = LoggerFactory.getLogger(FlinkKafkaProducerBase.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KafkaBaseOutputFormat.class);
 
 	private static final long serialVersionUID = 1L;
 
