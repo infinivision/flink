@@ -259,7 +259,7 @@ public class RichTableSchema implements Serializable {
 	/**
 	 * Describe the structure of an Index.
 	 */
-	public static class Index {
+	public static class Index implements Serializable{
 		public final boolean unique;
 		public final List<String> keyList;
 
