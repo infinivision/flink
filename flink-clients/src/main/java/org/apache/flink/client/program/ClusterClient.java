@@ -52,6 +52,7 @@ import org.apache.flink.runtime.highavailability.HighAvailabilityServicesUtils;
 import org.apache.flink.runtime.instance.ActorGateway;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.jobgraph.JobStatus;
+import org.apache.flink.runtime.jobgraph.JobVertexID;
 import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.runtime.leaderretrieval.LeaderRetrievalException;
 import org.apache.flink.runtime.leaderretrieval.LeaderRetrievalService;
@@ -1071,6 +1072,10 @@ public abstract class ClusterClient<T> {
 	 */
 	public CompletableFuture<Acknowledge> rescaleJob(JobID jobId, int newParallelism) {
 		throw new UnsupportedOperationException("The " + getClass().getSimpleName() + " does not support rescaling.");
+	}
+
+	public CompletableFuture<Acknowledge> updateJob(JobID jobId, List<JobVertexID> vertexIDs, List<Integer> newParallelisms) {
+		throw new UnsupportedOperationException("The " + getClass().getSimpleName() + " does not support updateJob.");
 	}
 
 	public void shutDownCluster() {

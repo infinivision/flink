@@ -73,6 +73,7 @@ import org.apache.flink.runtime.rest.handler.job.metrics.TaskManagerMetricsHandl
 import org.apache.flink.runtime.rest.handler.job.rescaling.RescalingHandlers;
 import org.apache.flink.runtime.rest.handler.job.savepoints.SavepointDisposalHandlers;
 import org.apache.flink.runtime.rest.handler.job.savepoints.SavepointHandlers;
+import org.apache.flink.runtime.rest.handler.job.update.UpdateJobHandlers;
 import org.apache.flink.runtime.rest.handler.legacy.ConstantTextHandler;
 import org.apache.flink.runtime.rest.handler.legacy.ExecutionGraphCache;
 import org.apache.flink.runtime.rest.handler.legacy.files.LogFileHandlerSpecification;
@@ -557,6 +558,20 @@ public class WebMonitorEndpoint<T extends RestfulGateway> extends RestServerEndp
 			timeout,
 			responseHeaders);
 
+		final UpdateJobHandlers updateJobHandlers = new UpdateJobHandlers();
+
+		final UpdateJobHandlers.UpdateJobTriggerHandler updateJobTriggerHandler = updateJobHandlers.new UpdateJobTriggerHandler(
+			restAddressFuture,
+			leaderRetriever,
+			timeout,
+			responseHeaders);
+
+		final UpdateJobHandlers.UpdateJobStatusHandler updateJobStatusHandler = updateJobHandlers.new UpdateJobStatusHandler(
+			restAddressFuture,
+			leaderRetriever,
+			timeout,
+			responseHeaders);
+
 		JobVertexBackPressureHandler jobVertexBackPressureHandler = new JobVertexBackPressureHandler(
 			restAddressFuture,
 			leaderRetriever,
@@ -679,6 +694,10 @@ public class WebMonitorEndpoint<T extends RestfulGateway> extends RestServerEndp
 		handlers.add(Tuple2.of(jobPendingSlotRequestsHandler.getMessageHeaders(), jobPendingSlotRequestsHandler));
 		handlers.add(Tuple2.of(rescalingTriggerHandler.getMessageHeaders(), rescalingTriggerHandler));
 		handlers.add(Tuple2.of(rescalingStatusHandler.getMessageHeaders(), rescalingStatusHandler));
+		//updateJob
+		handlers.add(Tuple2.of(updateJobTriggerHandler.getMessageHeaders(), updateJobTriggerHandler));
+		handlers.add(Tuple2.of(updateJobStatusHandler.getMessageHeaders(), updateJobStatusHandler));
+
 		handlers.add(Tuple2.of(savepointDisposalTriggerHandler.getMessageHeaders(), savepointDisposalTriggerHandler));
 		handlers.add(Tuple2.of(savepointDisposalStatusHandler.getMessageHeaders(), savepointDisposalStatusHandler));
 

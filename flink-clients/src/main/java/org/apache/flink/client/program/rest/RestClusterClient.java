@@ -42,6 +42,7 @@ import org.apache.flink.runtime.concurrent.FutureUtils;
 import org.apache.flink.runtime.concurrent.ScheduledExecutorServiceAdapter;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.jobgraph.JobStatus;
+import org.apache.flink.runtime.jobgraph.JobVertexID;
 import org.apache.flink.runtime.jobmaster.JobResult;
 import org.apache.flink.runtime.leaderretrieval.LeaderRetrievalException;
 import org.apache.flink.runtime.leaderretrieval.LeaderRetrievalService;
@@ -54,6 +55,10 @@ import org.apache.flink.runtime.rest.handler.job.rescaling.RescalingStatusHeader
 import org.apache.flink.runtime.rest.handler.job.rescaling.RescalingStatusMessageParameters;
 import org.apache.flink.runtime.rest.handler.job.rescaling.RescalingTriggerHeaders;
 import org.apache.flink.runtime.rest.handler.job.rescaling.RescalingTriggerMessageParameters;
+import org.apache.flink.runtime.rest.handler.job.update.UpdateJobStatusHeaders;
+import org.apache.flink.runtime.rest.handler.job.update.UpdateJobStatusMessageParameters;
+import org.apache.flink.runtime.rest.handler.job.update.UpdateJobTriggerHeaders;
+import org.apache.flink.runtime.rest.handler.job.update.UpdateJobTriggerMessageParameters;
 import org.apache.flink.runtime.rest.messages.EmptyMessageParameters;
 import org.apache.flink.runtime.rest.messages.EmptyRequestBody;
 import org.apache.flink.runtime.rest.messages.EmptyResponseBody;
@@ -569,6 +574,43 @@ public class RestClusterClient<T> extends ClusterClient<T> implements NewCluster
 			});
 
 		return rescalingOperationFuture.thenApply(
+			(AsynchronousOperationInfo asynchronousOperationInfo) -> {
+				if (asynchronousOperationInfo.getFailureCause() == null) {
+					return Acknowledge.get();
+				} else {
+					throw new CompletionException(asynchronousOperationInfo.getFailureCause());
+				}
+			});
+	}
+
+	@Override
+	public CompletableFuture<Acknowledge> updateJob(JobID jobId, List<JobVertexID> vertexIDs, List<Integer> newParallelisms) {
+
+		UpdateJobTriggerHeaders triggerHeaders = UpdateJobTriggerHeaders.getInstance();
+		UpdateJobTriggerMessageParameters triggerMessageParameters = triggerHeaders.getUnresolvedMessageParameters();
+		triggerMessageParameters.jobPathParameter.resolve(jobId);
+
+		triggerMessageParameters.jobVertexIdQueryParameter.resolve(vertexIDs);
+		triggerMessageParameters.rescalingParallelismQueryParameter.resolve(newParallelisms);
+
+		final CompletableFuture<TriggerResponse> triggerResponseFuture =  sendRequest(triggerHeaders, triggerMessageParameters);
+
+		CompletableFuture<AsynchronousOperationInfo> operationFuture = triggerResponseFuture.thenCompose(
+			(TriggerResponse triggerResponse) ->{
+				final TriggerId triggerId = triggerResponse.getTriggerId();
+				final UpdateJobStatusHeaders statusHeaders = UpdateJobStatusHeaders.getInstance();
+				final UpdateJobStatusMessageParameters statusMessageParameters = statusHeaders.getUnresolvedMessageParameters();
+
+				statusMessageParameters.jobPathParameter.resolve(jobId);
+				statusMessageParameters.triggerIdPathParameter.resolve(triggerId);
+
+				return pollResourceAsync(
+					() -> sendRequest(
+						statusHeaders,
+						statusMessageParameters));
+			}
+		);
+		return operationFuture.thenApply(
 			(AsynchronousOperationInfo asynchronousOperationInfo) -> {
 				if (asynchronousOperationInfo.getFailureCause() == null) {
 					return Acknowledge.get();

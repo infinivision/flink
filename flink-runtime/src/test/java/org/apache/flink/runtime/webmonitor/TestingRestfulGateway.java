@@ -33,6 +33,7 @@ import org.apache.flink.runtime.messages.Acknowledge;
 import org.apache.flink.runtime.messages.webmonitor.ClusterOverview;
 import org.apache.flink.runtime.messages.webmonitor.MultipleJobsDetails;
 import org.apache.flink.runtime.rest.handler.legacy.backpressure.OperatorBackPressureStatsResponse;
+import org.apache.flink.runtime.update.JobUpdateRequest;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -88,6 +89,8 @@ public class TestingRestfulGateway implements RestfulGateway {
 	protected BiFunction<JobID, JobVertexID, CompletableFuture<OperatorBackPressureStatsResponse>> requestOperatorBackPressureStatsFunction;
 
 	protected BiFunction<JobID, String, CompletableFuture<String>> triggerSavepointFunction;
+
+	protected Function<JobID, CompletableFuture<Acknowledge>> updateJobFunction;
 
 	public TestingRestfulGateway() {
 		this(
@@ -199,6 +202,11 @@ public class TestingRestfulGateway implements RestfulGateway {
 	}
 
 	@Override
+	public CompletableFuture<Acknowledge> updateJob(JobID jobId, JobUpdateRequest request, Time timeout) {
+		return updateJobFunction.apply(jobId);
+	}
+
+	@Override
 	public String getAddress() {
 		return address;
 	}
@@ -230,6 +238,7 @@ public class TestingRestfulGateway implements RestfulGateway {
 		protected Supplier<CompletableFuture<Collection<Tuple2<ResourceID, String>>>> requestTaskManagerMetricQueryServicePathsSupplier;
 		protected BiFunction<JobID, JobVertexID, CompletableFuture<OperatorBackPressureStatsResponse>> requestOperatorBackPressureStatsFunction;
 		protected BiFunction<JobID, String, CompletableFuture<String>> triggerSavepointFunction;
+		protected Function<JobID, CompletableFuture<Acknowledge>> updateJobFunction;
 
 		public Builder() {
 			cancelJobFunction = DEFAULT_CANCEL_JOB_FUNCTION;
@@ -315,8 +324,13 @@ public class TestingRestfulGateway implements RestfulGateway {
 			return this;
 		}
 
+		public Builder setUpdateJobFunction(Function<JobID, CompletableFuture<Acknowledge>> updateJobFunction){
+			this.updateJobFunction = updateJobFunction;
+			return this;
+		}
+
 		public TestingRestfulGateway build() {
-			return new TestingRestfulGateway(
+			TestingRestfulGateway gateway = new TestingRestfulGateway(
 				address,
 				hostname,
 				restAddress,
@@ -331,6 +345,8 @@ public class TestingRestfulGateway implements RestfulGateway {
 				requestTaskManagerMetricQueryServicePathsSupplier,
 				requestOperatorBackPressureStatsFunction,
 				triggerSavepointFunction);
+			gateway.updateJobFunction = updateJobFunction;
+			return gateway;
 		}
 	}
 }
