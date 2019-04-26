@@ -83,7 +83,11 @@ public class ConfigUtil {
 						@Override
 						public String getCurrentName() throws IOException {
 							if (_currToken == JsonToken.FIELD_NAME) {
-								return _currentFieldName.toLowerCase();
+								/**
+								 * mark:remove toLowerCase.
+								 */
+//								return _currentFieldName.toLowerCase();
+								return _currentFieldName;
 							}
 							return super.getCurrentName();
 						}
@@ -91,7 +95,11 @@ public class ConfigUtil {
 						@Override
 						public String getText() throws IOException {
 							if (_currToken == JsonToken.FIELD_NAME) {
-								return _currentFieldName.toLowerCase();
+								/**
+								 * mark:remove toLowerCase.
+								 */
+//								return _currentFieldName.toLowerCase();
+								return _currentFieldName;
 							}
 							return super.getText();
 						}
