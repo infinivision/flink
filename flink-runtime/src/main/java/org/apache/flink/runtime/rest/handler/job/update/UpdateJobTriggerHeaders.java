@@ -57,7 +57,7 @@ public class UpdateJobTriggerHeaders extends
 
 	@Override
 	public HttpMethodWrapper getHttpMethod() {
-		return HttpMethodWrapper.PATCH;
+		return HttpMethodWrapper.GET;
 	}
 
 	@Override
