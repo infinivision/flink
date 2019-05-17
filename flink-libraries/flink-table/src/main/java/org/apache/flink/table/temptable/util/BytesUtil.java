@@ -66,6 +66,7 @@ public final class BytesUtil {
 		for (Integer x : ints) {
 			byte[] bytes = intToBytes(x);
 			System.arraycopy(bytes, 0, buffer, index * Integer.BYTES, Integer.BYTES);
+			index++;
 		}
 		return buffer;
 	}
