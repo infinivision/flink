@@ -48,7 +48,10 @@ public class ConfigUtil {
 	public static DescriptorProperties normalizeYaml(Map<String, Object> yamlMap) {
 		final Map<String, String> normalized = new HashMap<>();
 		yamlMap.forEach((k, v) -> normalizeYamlObject(normalized, k, v));
-		final DescriptorProperties properties = new DescriptorProperties(true);
+		/**
+		 * mark:remove toLowerCase.
+		 */
+		final DescriptorProperties properties = new DescriptorProperties(false);
 		properties.putProperties(normalized);
 		return properties;
 	}

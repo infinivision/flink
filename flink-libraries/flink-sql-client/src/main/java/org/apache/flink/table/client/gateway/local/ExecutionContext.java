@@ -336,6 +336,9 @@ public class ExecutionContext<T> {
 				TableConfigOptions.SQL_EXEC_SOURCE_VALUES_INPUT_ENABLED,
 				true);
 
+			// add mini-batch setting to tableConfig
+			tableEnv.getConfig().getConf().addAll(mergedEnv.getExecution().asMap());
+
 			setDefaultCatalog(mergedEnv.getCatalogs());
 		}
 
