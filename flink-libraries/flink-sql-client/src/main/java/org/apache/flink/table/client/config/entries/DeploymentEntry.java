@@ -140,7 +140,7 @@ public class DeploymentEntry extends ConfigEntry {
 		final Map<String, String> mergedProperties = new HashMap<>(deployment1.asMap());
 		mergedProperties.putAll(deployment2.asMap());
 
-		final DescriptorProperties properties = new DescriptorProperties(true);
+		final DescriptorProperties properties = new DescriptorProperties(false);
 		properties.putProperties(mergedProperties);
 
 		return new DeploymentEntry(properties);
@@ -160,7 +160,7 @@ public class DeploymentEntry extends ConfigEntry {
 			}
 		});
 
-		final DescriptorProperties properties = new DescriptorProperties(true);
+		final DescriptorProperties properties = new DescriptorProperties(false);
 		properties.putProperties(enrichedProperties);
 
 		return new DeploymentEntry(properties);

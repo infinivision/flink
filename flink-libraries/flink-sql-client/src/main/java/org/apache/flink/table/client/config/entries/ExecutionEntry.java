@@ -269,7 +269,7 @@ public class ExecutionEntry extends ConfigEntry {
 		final Map<String, String> mergedProperties = new HashMap<>(execution1.asMap());
 		mergedProperties.putAll(execution2.asMap());
 
-		final DescriptorProperties properties = new DescriptorProperties(true);
+		final DescriptorProperties properties = new DescriptorProperties(false);
 		properties.putProperties(mergedProperties);
 
 		return new ExecutionEntry(properties);
@@ -289,7 +289,7 @@ public class ExecutionEntry extends ConfigEntry {
 			}
 		});
 
-		final DescriptorProperties properties = new DescriptorProperties(true);
+		final DescriptorProperties properties = new DescriptorProperties(false);
 		properties.putProperties(enrichedProperties);
 
 		return new ExecutionEntry(properties);
