@@ -387,6 +387,8 @@ public class WebRuntimeMonitor implements WebMonitor {
 
 		this.netty = new WebFrontendBootstrap(router, LOG, uploadDir, serverSSLContext, configuredAddress, configuredPort, config);
 
+		System.setProperty("WEB_MONITOR_ADDRESS", netty.getRestAddress());
+		LOG.info("set web monitor address in system properties = {}", System.getProperty("WEB_MONITOR_ADDRESS"));
 		localRestAddress.complete(netty.getRestAddress());
 	}
 
