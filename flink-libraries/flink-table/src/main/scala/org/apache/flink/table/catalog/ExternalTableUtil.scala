@@ -22,7 +22,7 @@ import java.util
 
 import org.apache.flink.table.api._
 import org.apache.flink.table.descriptors.ConnectorDescriptor
-import org.apache.flink.table.factories.{BatchTableSinkFactory, BatchTableSourceFactory, StreamTableSinkFactory, StreamTableSourceFactory, TableFactoryService, TableSourceParserFactory}
+import org.apache.flink.table.factories._
 import org.apache.flink.table.sinks.TableSink
 import org.apache.flink.table.sources.TableSource
 import org.apache.flink.table.util.{Logging, TableProperties}
@@ -120,9 +120,17 @@ object ExternalTableUtil extends Logging {
         getToolDescriptor(getStorageType(name, tableProperties), tableProperties))
       tableFactory.createStreamTableSink(tableProperties.toKeyLowerCase.toMap)
     } else {
-      val tableFactory = TableFactoryService.find(classOf[BatchTableSinkFactory[_]],
-        getToolDescriptor(getStorageType(name, tableProperties), tableProperties))
-      tableFactory.createBatchTableSink(tableProperties.toKeyLowerCase.toMap)
+      try {
+        val tableFactory = TableFactoryService.find(classOf[BatchTableSinkFactory[_]],
+          getToolDescriptor(getStorageType(name, tableProperties), tableProperties))
+        tableFactory.createBatchTableSink(tableProperties.toKeyLowerCase.toMap)
+      } catch {
+        case _: NoMatchingTableFactoryException =>
+          // fall back to compatible table sink
+          val tableFactory = TableFactoryService.find(classOf[BatchCompatibleTableSinkFactory[_]],
+            getToolDescriptor(getStorageType(name, tableProperties), tableProperties))
+          tableFactory.createBatchCompatibleTableSink(tableProperties.toKeyLowerCase.toMap)
+      }
     }
   }
 
