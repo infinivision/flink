@@ -107,9 +107,9 @@ public class PrometheusReporterTaskScopeTest {
 		taskMetricGroup2.counter("my_counter", counter2);
 
 		assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_counter", LABEL_NAMES, labelValues1),
-			equalTo(1.));
+				equalTo(1.));
 		assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_counter", LABEL_NAMES, labelValues2),
-			equalTo(2.));
+				equalTo(2.));
 	}
 
 	@Test
@@ -131,9 +131,9 @@ public class PrometheusReporterTaskScopeTest {
 		taskMetricGroup2.gauge("my_gauge", gauge2);
 
 		assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_gauge", LABEL_NAMES, labelValues1),
-			equalTo(3.));
+				equalTo(3.));
 		assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_gauge", LABEL_NAMES, labelValues2),
-			equalTo(4.));
+				equalTo(4.));
 	}
 
 	@Test
@@ -144,9 +144,9 @@ public class PrometheusReporterTaskScopeTest {
 		taskMetricGroup2.meter("my_meter", meter);
 
 		assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_meter", LABEL_NAMES, labelValues1),
-			equalTo(5.));
+				equalTo(5.));
 		assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_meter", LABEL_NAMES, labelValues2),
-			equalTo(5.));
+				equalTo(5.));
 	}
 
 	@Test
@@ -163,9 +163,9 @@ public class PrometheusReporterTaskScopeTest {
 		final String[] labelNamesWithQuantile = addToArray(LABEL_NAMES, "quantile");
 		for (Double quantile : PrometheusReporter.HistogramSummaryProxy.QUANTILES) {
 			assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_histogram", labelNamesWithQuantile, addToArray(labelValues1, "" + quantile)),
-				equalTo(quantile));
+					equalTo(quantile));
 			assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_histogram", labelNamesWithQuantile, addToArray(labelValues2, "" + quantile)),
-				equalTo(quantile));
+					equalTo(quantile));
 		}
 	}
 
@@ -180,17 +180,17 @@ public class PrometheusReporterTaskScopeTest {
 		taskMetricGroup2.counter("my_counter", counter2);
 
 		assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_counter", LABEL_NAMES, labelValues1),
-			equalTo(1.));
+				equalTo(1.));
 		assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_counter", LABEL_NAMES, labelValues2),
-			equalTo(2.));
+				equalTo(2.));
 
 		taskMetricGroup2.close();
 		assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_counter", LABEL_NAMES, labelValues1),
-			equalTo(1.));
+				equalTo(1.));
 
 		taskMetricGroup1.close();
 		assertThat(CollectorRegistry.defaultRegistry.getSampleValue("flink_taskmanager_job_task_my_counter", LABEL_NAMES, labelValues1),
-			nullValue());
+				nullValue());
 	}
 
 	private String[] addToArray(String[] array, String element) {

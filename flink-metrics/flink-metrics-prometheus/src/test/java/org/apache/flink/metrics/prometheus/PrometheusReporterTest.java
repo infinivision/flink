@@ -140,9 +140,9 @@ public class PrometheusReporterTest extends TestLogger {
 	private void assertThatGaugeIsExported(Metric metric, String name, String expectedValue) throws UnirestException {
 		final String prometheusName = SCOPE_PREFIX + name;
 		assertThat(addMetricAndPollResponse(metric, name),
-			containsString(HELP_PREFIX + prometheusName + " " + name + " (scope: taskmanager)\n" +
-				TYPE_PREFIX + prometheusName + " gauge" + "\n" +
-				prometheusName + DEFAULT_LABELS + " " + expectedValue + "\n"));
+				containsString(HELP_PREFIX + prometheusName + " " + name + " (scope: taskmanager)\n" +
+						TYPE_PREFIX + prometheusName + " gauge" + "\n" +
+						prometheusName + DEFAULT_LABELS + " " + expectedValue + "\n"));
 	}
 
 	@Test
@@ -154,11 +154,11 @@ public class PrometheusReporterTest extends TestLogger {
 
 		String response = addMetricAndPollResponse(testHistogram, histogramName);
 		assertThat(response, containsString(HELP_PREFIX + summaryName + " " + histogramName + " (scope: taskmanager)\n" +
-			TYPE_PREFIX + summaryName + " summary" + "\n" +
-			summaryName + "_count" + DEFAULT_LABELS + " 1.0" + "\n"));
+				TYPE_PREFIX + summaryName + " summary" + "\n" +
+				summaryName + "_count" + DEFAULT_LABELS + " 1.0" + "\n"));
 		for (String quantile : Arrays.asList("0.5", "0.75", "0.95", "0.98", "0.99", "0.999")) {
 			assertThat(response, containsString(
-				summaryName + "{" + DIMENSIONS + ",quantile=\"" + quantile + "\",} " + quantile + "\n"));
+					summaryName + "{" + DIMENSIONS + ",quantile=\"" + quantile + "\",} " + quantile + "\n"));
 		}
 	}
 
@@ -222,7 +222,7 @@ public class PrometheusReporterTest extends TestLogger {
 
 	@Test
 	public void booleanGaugeIsConvertedCorrectly() {
-		assertThat(PrometheusReporter.gaugeFrom(new Gauge<Boolean>() {
+		assertThat(AbstractPrometheusReporter.gaugeFrom(new Gauge<Boolean>() {
 			@Override
 			public Boolean getValue() {
 				return true;
@@ -254,8 +254,9 @@ public class PrometheusReporterTest extends TestLogger {
 	}
 
 	@Test
-	public void addingUnknownMetricTypeDoesNotThrowException(){
-		class SomeMetricType implements Metric{}
+	public void addingUnknownMetricTypeDoesNotThrowException() {
+		class SomeMetricType implements Metric {
+		}
 
 		reporter.notifyOfAddedMetric(new SomeMetricType(), "name", metricGroup);
 	}

@@ -208,6 +208,7 @@ public abstract class RestServerEndpoint implements AutoCloseableAsync {
 			}
 
 			restBaseUrl = protocol + advertisedAddress + ':' + port;
+			System.setProperty("WEB_MONITOR_ADDRESS", restBaseUrl);
 
 			restAddressFuture.complete(restBaseUrl);
 
