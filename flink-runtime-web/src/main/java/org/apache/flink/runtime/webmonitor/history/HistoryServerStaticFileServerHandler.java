@@ -211,10 +211,6 @@ public class HistoryServerStaticFileServerHandler extends SimpleChannelInboundHa
 			HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
 			StaticFileServerHandler.setContentTypeHeader(response, file);
 
-			// the job overview should be updated as soon as possible
-			if (!requestPath.equals("/joboverview.json")) {
-				StaticFileServerHandler.setDateAndCacheHeaders(response, file);
-			}
 			if (HttpHeaders.isKeepAlive(request)) {
 				response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
 			}

@@ -13,20 +13,14 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
+.name {
+  width: 500px;
+  overflow: hidden;
+  display: inline-block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-export * from './configuration';
-export * from './jar';
-export * from './job-overview';
-export * from './job-detail';
-export * from './job-exception';
-export * from './job-timeline';
-export * from './job-config';
-export * from './job-vertex-task-manager';
-export * from './job-checkpoint';
-export * from './job-subtask';
-export * from './job-backpressure';
-export * from './job-slots';
-export * from './plan';
-export * from './overview';
-export * from './task-manager';
-export * from './job-containers';
+:host {
+  padding: 12px;
+}
