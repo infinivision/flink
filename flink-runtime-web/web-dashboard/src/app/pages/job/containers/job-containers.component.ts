@@ -14,19 +14,30 @@
  *   limitations under the License.
  */
 
-export * from './configuration';
-export * from './jar';
-export * from './job-overview';
-export * from './job-detail';
-export * from './job-exception';
-export * from './job-timeline';
-export * from './job-config';
-export * from './job-vertex-task-manager';
-export * from './job-checkpoint';
-export * from './job-subtask';
-export * from './job-backpressure';
-export * from './job-slots';
-export * from './plan';
-export * from './overview';
-export * from './task-manager';
-export * from './job-containers';
+import { Component, OnInit } from '@angular/core';
+import { first, flatMap } from 'rxjs/operators';
+import { JobService } from 'flink-services';
+
+@Component({
+  selector   : 'flink-job-containers',
+  templateUrl: './job-containers.component.html',
+  styleUrls  : [ './job-containers.component.less' ]
+})
+export class ContainersComponent implements OnInit {
+  attempts = [];
+
+  constructor(private jobService: JobService) {
+  }
+
+  ngOnInit() {
+    this.jobService.jobDetail$.pipe(
+      first(),
+      flatMap(() => this.jobService.loadContainers(this.jobService.jobDetail.jid))
+    ).subscribe(data => {
+      this.attempts = data && data['containers'] ||  [];
+      console.log(this.attempts);
+      console.log(data);
+    });
+  }
+
+}

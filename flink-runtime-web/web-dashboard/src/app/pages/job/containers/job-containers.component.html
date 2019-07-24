@@ -1,0 +1,73 @@
+<!--
+  ~   Licensed to the Apache Software Foundation (ASF) under one
+  ~   or more contributor license agreements.  See the NOTICE file
+  ~   distributed with this work for additional information
+  ~   regarding copyright ownership.  The ASF licenses this file
+  ~   to you under the Apache License, Version 2.0 (the
+  ~   "License"); you may not use this file except in compliance
+  ~   with the License.  You may obtain a copy of the License at
+  ~       http://www.apache.org/licenses/LICENSE-2.0
+  ~   Unless required by applicable law or agreed to in writing, software
+  ~   distributed under the License is distributed on an "AS IS" BASIS,
+  ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~   See the License for the specific language governing permissions and
+  ~   limitations under the License.
+  -->
+
+<nz-table
+        class="no-border small"
+        [nzSize]="'small'"
+        [nzData]="attempts"
+        [nzFrontPagination]="false"
+        [nzShowPagination]="false">
+    <thead>
+    <tr>
+        <th nzShowExpand></th>
+        <th>attemptID</th>
+        <th>Container ID</th>
+        <th>host</th>
+        <th>state</th>
+        <th>trackingURL</th>
+        <th>flinkWeb</th>
+    </tr>
+    </thead>
+    <tbody>
+    <ng-container *ngFor="let data of attempts">
+        <tr>
+            <td nzShowExpand [(nzExpand)]="data.expand"></td>
+            <td>{{data.attemptID}}</td>
+            <td>{{data.cid}}</td>
+            <td>{{data.host}}</td>
+            <td>{{data.state}}</td>
+            <td><a href="{{data.trackingURL}}" target="_blank">{{data.trackingURL}}</a></td>
+            <td><a href="{{data.flinkWeb}}" target="_blank">{{data.flinkWeb}}</a></td>
+        </tr>
+        <tr [nzExpand]="data.expand">
+            <td colspan="8">
+                <nz-table
+                        [nzSize]="'small'"
+                        class="no-border small"
+                        [nzData]="data.containers"
+                        [nzFrontPagination]="false"
+                        [nzShowPagination]="false">
+                <thead>
+                <tr>
+                    <th>Container ID</th>
+                    <th>Node</th>
+                    <th>LogURL</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let container of data.containers">
+                    <td>{{container.cid}}</td>
+                    <td>{{container.node}}</td>
+                    <td><a href="{{container.logURL}}" target="_blank">{{container.logURL}}</a></td>
+                </tr>
+                </tbody>
+            </nz-table>
+            </td>
+       </tr>
+     </ng-container>
+     </tbody>
+</nz-table>
+

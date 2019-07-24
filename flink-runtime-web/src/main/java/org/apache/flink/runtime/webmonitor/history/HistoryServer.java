@@ -31,9 +31,10 @@ import org.apache.flink.runtime.rest.handler.legacy.DashboardConfigHandler;
 import org.apache.flink.runtime.rest.messages.DashboardConfiguration;
 import org.apache.flink.runtime.security.SecurityConfiguration;
 import org.apache.flink.runtime.security.SecurityUtils;
+import org.apache.flink.runtime.webmonitor.JobCollector;
 import org.apache.flink.runtime.webmonitor.WebMonitorUtils;
+import org.apache.flink.runtime.webmonitor.handlers.JobHandler;
 import org.apache.flink.runtime.webmonitor.utils.WebFrontendBootstrap;
-import org.apache.flink.util.FileUtils;
 import org.apache.flink.util.FlinkException;
 import org.apache.flink.util.Preconditions;
 import org.apache.flink.util.ShutdownHookUtil;
@@ -222,6 +223,10 @@ public class HistoryServer {
 			LOG.info("Using directory {} as local cache.", webDir);
 
 			Router router = new Router();
+			JobCollector jobCollector = new JobCollector(webDir);
+			JobHandler jobHandler = new JobHandler(jobCollector);
+			router.GET("/newapp", jobHandler);
+			router.GET("/jobs/:jobid/yarn-cancel", jobHandler);
 			router.GET("/:*", new HistoryServerStaticFileServerHandler(webDir));
 
 			if (!webDir.exists() && !webDir.mkdirs()) {
@@ -249,12 +254,13 @@ public class HistoryServer {
 
 				archiveFetcher.stop();
 
-				try {
-					LOG.info("Removing web dashboard root cache directory {}", webDir);
-					FileUtils.deleteDirectory(webDir);
-				} catch (Throwable t) {
-					LOG.warn("Error while deleting web root directory {}", webDir, t);
-				}
+				// do not remove webDir
+//				try {
+//					LOG.info("Removing web dashboard root cache directory {}", webDir);
+//					FileUtils.deleteDirectory(webDir);
+//				} catch (Throwable t) {
+//					LOG.warn("Error while deleting web root directory {}", webDir, t);
+//				}
 
 				LOG.info("Stopped history server.");
 

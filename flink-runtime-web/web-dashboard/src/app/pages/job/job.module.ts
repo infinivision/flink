@@ -32,6 +32,7 @@ import { JobExceptionsComponent } from './exceptions/job-exceptions.component';
 import { JobCheckpointsComponent } from './checkpoints/job-checkpoints.component';
 import { JobCheckpointsDetailComponent } from './checkpoints/detail/job-checkpoints-detail.component';
 import { JobCheckpointsSubtaskComponent } from './checkpoints/subtask/job-checkpoints-subtask.component';
+import {ContainersComponent} from "./containers/job-containers.component";
 
 @NgModule({
   imports        : [
@@ -52,7 +53,8 @@ import { JobCheckpointsSubtaskComponent } from './checkpoints/subtask/job-checkp
     JobCheckpointsComponent,
     JobCheckpointsDetailComponent,
     JobCheckpointsSubtaskComponent,
-    JobPendingSlotsComponent
+    JobPendingSlotsComponent,
+    ContainersComponent
   ],
 })
 export class JobModule {

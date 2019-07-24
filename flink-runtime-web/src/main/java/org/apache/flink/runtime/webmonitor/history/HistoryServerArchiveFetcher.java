@@ -68,7 +68,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  *
  * <p>The archives are downloaded and expanded into a file structure analog to the REST API defined in the WebRuntimeMonitor.
  */
-class HistoryServerArchiveFetcher {
+public class HistoryServerArchiveFetcher {
 
 	private static final Logger LOG = LoggerFactory.getLogger(HistoryServerArchiveFetcher.class);
 
@@ -122,7 +122,7 @@ class HistoryServerArchiveFetcher {
 		private final File webJobDir;
 		private final File webOverviewDir;
 
-		private static final String JSON_FILE_ENDING = ".json";
+		public static final String JSON_FILE_ENDING = ".json";
 
 		JobArchiveFetcherTask(List<HistoryServer.RefreshLocation> refreshDirs, File webDir, CountDownLatch numFinishedPolls) {
 			this.refreshDirs = checkNotNull(refreshDirs);
@@ -283,7 +283,7 @@ class HistoryServerArchiveFetcher {
 	 *
 	 * <p>For the display in the HistoryServer WebFrontend we have to combine these overviews.
 	 */
-	private static void updateJobOverview(File webOverviewDir, File webDir) {
+	public static void updateJobOverview(File webOverviewDir, File webDir) {
 		try (JsonGenerator gen = jacksonFactory.createGenerator(HistoryServer.createOrGetFile(webDir, JobsOverviewHeaders.URL))) {
 			File[] overviews = new File(webOverviewDir.getPath()).listFiles();
 			if (overviews != null) {

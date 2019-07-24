@@ -23,6 +23,7 @@ import { JobExceptionsComponent } from './exceptions/job-exceptions.component';
 import { JobComponent } from './job.component';
 import { JobPendingSlotsComponent } from './pending-slots/job-pending-slots.component';
 import { JobTimelineComponent } from './timeline/job-timeline.component';
+import {ContainersComponent} from "./containers/job-containers.component";
 
 const routes: Routes = [
   {
@@ -85,6 +86,13 @@ const routes: Routes = [
         component: JobPendingSlotsComponent,
         data     : {
           path: 'pending-slots'
+        }
+      },
+      {
+        path     : 'containers',
+        component: ContainersComponent,
+        data     : {
+          path: 'containers'
         }
       },
       { path: '**', redirectTo: 'overview', pathMatch: 'full' }
