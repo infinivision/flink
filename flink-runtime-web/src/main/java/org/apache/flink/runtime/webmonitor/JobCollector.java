@@ -25,6 +25,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class JobCollector implements Runnable {
 	private static final Logger LOG = LoggerFactory.getLogger(JobCollector.class);
 	private static final String JSON_FILE_ENDING = ".json";
 
-	private Map<AppMaster, Set<Container>> appMasters = new ConcurrentHashMap<>();
+	private Map<AppMaster, Map<String, Set<Container>>> appMasters = new ConcurrentHashMap<>();
 	private YarnClient yarnClient;
 	private File webDir;
 	private File webJobDir;
@@ -55,11 +56,11 @@ public class JobCollector implements Runnable {
 	private ConcurrentHashMap<String, Object> tobeCanceledJobId = new ConcurrentHashMap<>();
 
 	private static final Set<String> JOB_FINISHED_STATE =
-			Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-					"FAILED",
-					"CANCELED",
-					"FINISHED"
-			)));
+		Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+			"FAILED",
+			"CANCELED",
+			"FINISHED"
+		)));
 
 	public JobCollector(File webDir) {
 		YarnConfiguration yarnConfiguration = new YarnConfiguration();
@@ -75,7 +76,7 @@ public class JobCollector implements Runnable {
 	}
 
 	public void addAppMaster(String appId, String host, String port) {
-		this.appMasters.put(new AppMaster(appId, host, port), Collections.emptySet());
+		this.appMasters.put(new AppMaster(appId, host, port), new HashMap<>());
 	}
 
 	public void cancelJob(String jobId) {
@@ -112,7 +113,7 @@ public class JobCollector implements Runnable {
 		if (this.tobeCanceledJobId.containsKey(jobID)) {
 			try {
 				HttpResponse<String> response = Unirest.get(baseUrl + "/jobs/" + jobID + "/yarn-cancel")
-						.asString();
+					.asString();
 				LOG.info("canceling jobId={}, response={}", jobID, response.getBody());
 				// next turn to update job status
 				this.executor.schedule(this, 0, TimeUnit.SECONDS);
@@ -156,7 +157,12 @@ public class JobCollector implements Runnable {
 		for (ApplicationAttemptReport applicationAttempt : applicationAttempts) {
 			JSONObject attempt = new JSONObject();
 			attempt.put("cid", applicationAttempt.getAMContainerId());
-			attempt.put("attemptID", applicationAttempt.getApplicationAttemptId());
+			String apptemtId = applicationAttempt.getApplicationAttemptId().toString();
+			Map<String, Set<Container>> attempMap = appMasters.get(appMaster);
+			if (!attempMap.containsKey(apptemtId)) {
+				attempMap.put(apptemtId, new HashSet<>());
+			}
+			attempt.put("attemptID", apptemtId);
 			attempt.put("host", applicationAttempt.getHost());
 			attempt.put("trackingURL", applicationAttempt.getTrackingUrl());
 			attempt.put("flinkWeb", baseUrl);
@@ -164,10 +170,17 @@ public class JobCollector implements Runnable {
 			List<ContainerReport> taskContainers = yarnClient.getContainers(applicationAttempt.getApplicationAttemptId());
 			attempt.put("containers", new JSONArray());
 			for (ContainerReport taskContainer : taskContainers) {
+				Container c = new Container();
+				c.cid = taskContainer.getContainerId().toString();
+				c.host = taskContainer.getAssignedNode().toString();
+				c.logUrl = taskContainer.getLogUrl();
+				attempMap.get(apptemtId).add(c);
+			}
+			for (Container c : attempMap.get(apptemtId)) {
 				JSONObject container = new JSONObject();
-				container.put("cid", taskContainer.getContainerId());
-				container.put("node", taskContainer.getAssignedNode().toString());
-				container.put("logURL", taskContainer.getLogUrl());
+				container.put("cid", c.cid);
+				container.put("node", c.host);
+				container.put("logURL", c.logUrl);
 				attempt.getJSONArray("containers").put(container);
 			}
 			containers.put(attempt);
@@ -208,8 +221,8 @@ public class JobCollector implements Runnable {
 
 	private JsonNode responseBodyOf(String url) throws UnirestException {
 		return Unirest.get(url)
-				.asJson()
-				.getBody();
+			.asJson()
+			.getBody();
 	}
 
 	static class Container {
@@ -217,6 +230,23 @@ public class JobCollector implements Runnable {
 		String status;
 		String logUrl;
 		String host;
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) {
+				return true;
+			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			Container container = (Container) o;
+			return cid.equals(container.cid);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(cid);
+		}
 	}
 
 	static class AppMaster {
@@ -243,8 +273,8 @@ public class JobCollector implements Runnable {
 			}
 			AppMaster appMaster = (AppMaster) o;
 			return Objects.equals(appId, appMaster.appId) &&
-					Objects.equals(host, appMaster.host) &&
-					Objects.equals(port, appMaster.port);
+				Objects.equals(host, appMaster.host) &&
+				Objects.equals(port, appMaster.port);
 		}
 
 		@Override
@@ -255,10 +285,10 @@ public class JobCollector implements Runnable {
 		@Override
 		public String toString() {
 			return "AppMaster{" +
-					"appId='" + appId + '\'' +
-					", host='" + host + '\'' +
-					", port='" + port + '\'' +
-					'}';
+				"appId='" + appId + '\'' +
+				", host='" + host + '\'' +
+				", port='" + port + '\'' +
+				'}';
 		}
 	}
 }
