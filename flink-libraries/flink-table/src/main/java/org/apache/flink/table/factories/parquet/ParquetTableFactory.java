@@ -95,6 +95,7 @@ public class ParquetTableFactory implements
 	public BatchTableSink<BaseRow> createBatchTableSink(Map<String, String> props) {
 		TableProperties tableProperties = new TableProperties();
 		tableProperties.putProperties(props);
+		RichTableSchema richTableSchema = tableProperties.readSchemaFromProperties(null);
 
 		String filePath = tableProperties.getString(ParquetOptions.FILE_PATH);
 		if (StringUtils.isNullOrWhitespaceOnly(filePath)) {
@@ -111,7 +112,8 @@ public class ParquetTableFactory implements
 		CompressionCodecName compressionCodecName = CompressionCodecName.valueOf(tableProperties
 				.getString(ParquetOptions.COMPRESSION_CODEC_NAME));
 
-		return new ParquetTableSink(filePath, writeModeOption, compressionCodecName);
+		return (ParquetTableSink) (new ParquetTableSink(filePath, writeModeOption, compressionCodecName)
+			.configure(richTableSchema.getColumnNames(), richTableSchema.getColumnTypes()));
 	}
 
 	@Override
