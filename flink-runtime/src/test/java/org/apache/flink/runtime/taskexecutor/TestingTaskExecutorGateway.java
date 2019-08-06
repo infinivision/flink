@@ -186,6 +186,11 @@ public class TestingTaskExecutorGateway implements TaskExecutorGateway {
 	}
 
 	@Override
+	public CompletableFuture<TransientBlobKey> requestFileUpload(FileType fileType, Time timeout) {
+		return FutureUtils.completedExceptionally(new UnsupportedOperationException());
+	}
+
+	@Override
 	public boolean canBeReleased() {
 		return true;
 	}

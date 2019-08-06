@@ -313,14 +313,6 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 	public void start() throws Exception {
 		super.start();
 
-		// start by connecting to the ResourceManager
-		try {
-			startRegistrationTimeout();
-			resourceManagerLeaderRetriever.start(new ResourceManagerLeaderListener());
-		} catch (Exception e) {
-			onFatalError(e);
-		}
-
 		// tell the task slot table who's responsible for the task slot actions
 		taskSlotTable.start(new SlotActionsImpl());
 
@@ -328,6 +320,14 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
 		jobLeaderService.start(getAddress(), getRpcService(), haServices, new JobLeaderListenerImpl());
 
 		fileCache = new FileCache(taskManagerConfiguration.getTmpDirectories(), blobCacheService.getPermanentBlobService());
+
+		// finally, start connecting to the ResourceManager
+		try {
+			startRegistrationTimeout();
+			resourceManagerLeaderRetriever.start(new ResourceManagerLeaderListener());
+		} catch (Exception e) {
+			onFatalError(e);
+		}
 	}
 
 	/**
