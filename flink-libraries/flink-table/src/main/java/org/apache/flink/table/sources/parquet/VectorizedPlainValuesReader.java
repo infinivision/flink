@@ -26,6 +26,7 @@ import org.apache.flink.table.dataformat.vector.DoubleColumnVector;
 import org.apache.flink.table.dataformat.vector.FloatColumnVector;
 import org.apache.flink.table.dataformat.vector.IntegerColumnVector;
 import org.apache.flink.table.dataformat.vector.LongColumnVector;
+import org.apache.flink.table.dataformat.vector.TimestampColumnVector;
 
 import org.apache.parquet.column.values.ValuesReader;
 import org.apache.parquet.io.api.Binary;
@@ -186,6 +187,22 @@ public class VectorizedPlainValuesReader extends ValuesReader implements Vectori
 			v.setVal(rowId + i, buffer, offset - BYTE_ARRAY_OFFSET, len);
 			offset += len;
 		}
+	}
+
+	@Override
+	public void readInt96s(int total, TimestampColumnVector c, int rowId) {
+		for (int i = 0; i < total; i++) {
+			long ts = readInt96();
+			c.vector[rowId + i] = ts;
+			offset += 12;
+		}
+	}
+
+	@Override
+	public long readInt96() {
+		long result = ParquetTimestampUtils.getTimestampMillis(readBinary(12));
+		offset += 12;
+		return result;
 	}
 
 	@Override

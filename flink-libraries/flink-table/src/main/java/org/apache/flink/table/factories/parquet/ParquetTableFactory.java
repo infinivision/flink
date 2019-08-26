@@ -70,10 +70,10 @@ public class ParquetTableFactory implements
 
 		boolean enumerateNestedFiles = tableProperties.getBoolean(ParquetOptions.ENUMERATE_NESTED_FILES);
 		return new ParquetVectorizedColumnRowTableSource(
-				new Path(filePath),
-				richTableSchema.getColumnTypes(),
-				richTableSchema.getColumnNames(),
-				enumerateNestedFiles);
+			new Path(filePath),
+			richTableSchema.getColumnTypes(),
+			richTableSchema.getColumnNames(),
+			enumerateNestedFiles);
 	}
 
 	@Override
@@ -106,14 +106,19 @@ public class ParquetTableFactory implements
 		String writeMode = tableProperties.getString(ParquetOptions.WRITE_MODE);
 		if (!DEFAULT_WRITE_MODE.equals(writeMode)) {
 			writeModeOption = new Some(WriteMode.valueOf(
-					tableProperties.getString(ParquetOptions.WRITE_MODE)));
+				tableProperties.getString(ParquetOptions.WRITE_MODE)));
 		}
 
 		CompressionCodecName compressionCodecName = CompressionCodecName.valueOf(tableProperties
-				.getString(ParquetOptions.COMPRESSION_CODEC_NAME));
+			.getString(ParquetOptions.COMPRESSION_CODEC_NAME));
 
+		String partitonColumsStr = tableProperties.getString(ParquetOptions.PARTITION);
+		String[] partitonColumns = new String[0];
+		if (!partitonColumsStr.equals("")) {
+			partitonColumns = partitonColumsStr.split("[;,]");
+		}
 		return (ParquetTableSink) (new ParquetTableSink(filePath, writeModeOption, compressionCodecName)
-			.configure(richTableSchema.getColumnNames(), richTableSchema.getColumnTypes()));
+			.configure(richTableSchema.getColumnNames(), richTableSchema.getColumnTypes(), partitonColumns));
 	}
 
 	@Override

@@ -27,6 +27,7 @@ import org.apache.flink.table.dataformat.vector.FloatColumnVector;
 import org.apache.flink.table.dataformat.vector.IntegerColumnVector;
 import org.apache.flink.table.dataformat.vector.LongColumnVector;
 import org.apache.flink.table.dataformat.vector.ShortColumnVector;
+import org.apache.flink.table.dataformat.vector.TimestampColumnVector;
 
 /**
  * A values reader for Parquet's run-length encoded data for definition ids and reading actual data
@@ -277,6 +278,47 @@ public final class VectorizedDefValuesReader extends VectorizedRleValuesReaderBa
 					for (int i = 0; i < n; ++i) {
 						if (currentBuffer[currentBufferIdx++] == level) {
 							c.vector[rowId + i] = data.readDouble();
+						} else {
+							c.noNulls = false;
+							c.isNull[rowId + i] = true;
+						}
+					}
+					break;
+			}
+			rowId += n;
+			left -= n;
+			currentCount -= n;
+		}
+	}
+
+
+	public void readInt96(
+		int total,
+		TimestampColumnVector c,
+		int rowId,
+		int level,
+		VectorizedValuesReader data) {
+		int left = total;
+		while (left > 0) {
+			if (this.currentCount == 0) {
+				this.readNextGroup();
+			}
+			int n = Math.min(left, this.currentCount);
+			switch (mode) {
+				case RLE:
+					if (currentValue == level) {
+						data.readInt96s(n, c, rowId);
+					} else {
+						for (int index = rowId; index < rowId + n; index++) {
+							c.isNull[index] = true;
+						}
+						c.noNulls = false;
+					}
+					break;
+				case PACKED:
+					for (int i = 0; i < n; ++i) {
+						if (currentBuffer[currentBufferIdx++] == level) {
+							c.vector[rowId + i] = data.readInt96();
 						} else {
 							c.noNulls = false;
 							c.isNull[rowId + i] = true;

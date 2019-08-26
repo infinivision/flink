@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A base stream writer for HBase engine, commonly an sub-class implementation should override `invoke` method for sink function.
@@ -62,8 +63,10 @@ public abstract class HBaseWriterBase<T> extends RichSinkFunction<T> {
 	protected String hTableName;
 	protected HBaseTableSchemaV2 hTableSchema;
 	private byte[] serializedConfig;
-	private transient Connection hConnection;
+	private static transient Connection hConnection;
+	private static final Object LOCK = new Object();
 	protected transient HTable table;
+	private static final AtomicInteger HCONNECTION_REFERENCE_COUNT = new AtomicInteger(0);
 
 	public HBaseWriterBase(String hTableName, HBaseTableSchemaV2 hTableSchema) throws IOException {
 		// serialize default HBaseConfiguration from client's env
@@ -97,9 +100,12 @@ public abstract class HBaseWriterBase<T> extends RichSinkFunction<T> {
 		LOG.info("start open ...");
 		org.apache.hadoop.conf.Configuration config = prepareRuntimeConfiguration();
 		try {
-			if (null == hConnection) {
-				hConnection = ConnectionFactory.createConnection(config);
+			synchronized (LOCK) {
+				if (null == hConnection) {
+					hConnection = ConnectionFactory.createConnection(config);
+				}
 			}
+			HCONNECTION_REFERENCE_COUNT.incrementAndGet();
 			table = (HTable) hConnection.getTable(TableName.valueOf(hTableName));
 		} catch (TableNotFoundException tnfe) {
 			LOG.error("The table " + hTableName + " not found ", tnfe);
@@ -124,7 +130,13 @@ public abstract class HBaseWriterBase<T> extends RichSinkFunction<T> {
 		}
 		if (null != hConnection) {
 			try {
-				hConnection.close();
+				int refCnt = HCONNECTION_REFERENCE_COUNT.getAndDecrement();
+				if (refCnt == 1) {
+					LOG.info("not other slot use hbase connection any more, now close it...");
+					hConnection.close();
+				} else {
+					LOG.info("cannot close hbase connection as there still other slot use it...");
+				}
 			} catch (IOException e) {
 				// ignore exception when close.
 				LOG.warn("exception when close connection", e);

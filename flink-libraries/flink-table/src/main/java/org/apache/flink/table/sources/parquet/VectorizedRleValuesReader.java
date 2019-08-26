@@ -25,6 +25,7 @@ import org.apache.flink.table.dataformat.vector.DoubleColumnVector;
 import org.apache.flink.table.dataformat.vector.FloatColumnVector;
 import org.apache.flink.table.dataformat.vector.IntegerColumnVector;
 import org.apache.flink.table.dataformat.vector.LongColumnVector;
+import org.apache.flink.table.dataformat.vector.TimestampColumnVector;
 
 import org.apache.parquet.io.api.Binary;
 
@@ -92,6 +93,11 @@ public final class VectorizedRleValuesReader extends VectorizedRleValuesReaderBa
 	}
 
 	@Override
+	public long readInt96() {
+		throw new UnsupportedOperationException("read int 96.");
+	}
+
+	@Override
 	public void readBytes(int total, ByteColumnVector c, int rowId) {
 		throw new UnsupportedOperationException("only readInts is valid.");
 	}
@@ -104,6 +110,11 @@ public final class VectorizedRleValuesReader extends VectorizedRleValuesReaderBa
 	@Override
 	public void readBinaries(int total, BytesColumnVector c, int rowId) {
 		throw new UnsupportedOperationException("only readInts is valid.");
+	}
+
+	@Override
+	public void readInt96s(int total, TimestampColumnVector c, int rowId) {
+		throw new UnsupportedOperationException("read int 96.");
 	}
 
 	@Override

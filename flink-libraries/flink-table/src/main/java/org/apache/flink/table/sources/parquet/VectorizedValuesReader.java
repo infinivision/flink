@@ -25,6 +25,7 @@ import org.apache.flink.table.dataformat.vector.DoubleColumnVector;
 import org.apache.flink.table.dataformat.vector.FloatColumnVector;
 import org.apache.flink.table.dataformat.vector.IntegerColumnVector;
 import org.apache.flink.table.dataformat.vector.LongColumnVector;
+import org.apache.flink.table.dataformat.vector.TimestampColumnVector;
 
 import org.apache.parquet.io.api.Binary;
 
@@ -40,6 +41,8 @@ public interface VectorizedValuesReader {
 	int readInteger();
 
 	long readLong();
+
+	long readInt96();
 
 	float readFloat();
 
@@ -63,4 +66,6 @@ public interface VectorizedValuesReader {
 	void readDoubles(int total, DoubleColumnVector c, int rowId);
 
 	void readBinaries(int total, BytesColumnVector c, int rowId);
+
+	void readInt96s(int total, TimestampColumnVector c, int rowId);
 }

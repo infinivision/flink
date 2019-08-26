@@ -1133,10 +1133,10 @@ public class SlotManager implements AutoCloseable {
 					// checking whether TaskManagers can be safely removed
 					final TaskExecutorGateway taskExecutorGateway = taskManagerRegistration.getTaskManagerConnection().getTaskExecutorGateway();
 					if (!taskExecutorGateway.canBeReleased()) {
-						LOG.debug("Task executor {} can not be released", taskExecutorGateway.getAddress());
+						LOG.info("Task executor {} can not be released", taskExecutorGateway.getAddress());
 						continue;
 					} else {
-						LOG.debug("Task executor {} can be released", taskExecutorGateway.getAddress());
+						LOG.info("Task executor {} can be released", taskExecutorGateway.getAddress());
 					}
 
 					// we collect the instance ids first in order to avoid concurrent modifications by the

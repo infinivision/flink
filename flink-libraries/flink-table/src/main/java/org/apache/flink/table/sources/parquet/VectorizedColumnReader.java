@@ -31,6 +31,7 @@ import org.apache.flink.table.dataformat.vector.FloatColumnVector;
 import org.apache.flink.table.dataformat.vector.IntegerColumnVector;
 import org.apache.flink.table.dataformat.vector.LongColumnVector;
 import org.apache.flink.table.dataformat.vector.ShortColumnVector;
+import org.apache.flink.table.dataformat.vector.TimestampColumnVector;
 import org.apache.flink.table.dataformat.vector.VectorizedColumnBatch;
 
 import org.apache.parquet.bytes.BytesUtils;
@@ -180,6 +181,9 @@ public class VectorizedColumnReader {
 					case BINARY:
 						defColumn.readBinaries(num, (BytesColumnVector) column, rowId, maxDefLevel, (VectorizedValuesReader) dataColumn);
 						break;
+					case INT96:
+						defColumn.readInt96(num, (TimestampColumnVector) column, rowId, maxDefLevel, (VectorizedValuesReader)dataColumn);
+						break;
 					case FIXED_LEN_BYTE_ARRAY:
 						VectorizedValuesReader data = (VectorizedValuesReader) dataColumn;
 						// This is where we implement support for the valid type conversions.
@@ -263,6 +267,18 @@ public class VectorizedColumnReader {
 					for (int i = rowId; i < rowId + num; ++i) {
 						if (column.noNulls || !column.isNull[i]) {
 							((LongColumnVector) column).vector[i] = dictionary.decodeToLong(dictionaryIds.vector[i]);
+						}
+					}
+				} else {
+					throw new UnsupportedOperationException("Unimplemented type: " + fieldType);
+				}
+				break;
+
+			case INT96:
+				if (fieldType.equals(DataTypes.TIMESTAMP)) {
+					for (int i = rowId; i < rowId + num; ++i) {
+						if (column.noNulls || !column.isNull[i]) {
+							((TimestampColumnVector) column).vector[i] = ParquetTimestampUtils.getTimestampMillis(dictionary.decodeToBinary(dictionaryIds.vector[i]));
 						}
 					}
 				} else {

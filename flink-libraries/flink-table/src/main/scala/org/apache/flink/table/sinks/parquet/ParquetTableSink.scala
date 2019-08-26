@@ -45,6 +45,8 @@ class ParquetTableSink(
     extends TableSinkBase[BaseRow]
     with BatchTableSink[BaseRow]{
 
+  private var partitionColumns: Array[String] = _
+
   /** Return a deep copy of the [[org.apache.flink.table.sinks.TableSink]]. */
   override protected def copy: TableSinkBase[BaseRow] = {
     new ParquetTableSink(dir, writeMode, compression)
@@ -52,6 +54,14 @@ class ParquetTableSink(
 
   override def getOutputType: DataType =
     new RowType(getFieldTypes: _*)
+
+  def configure(fieldNames: Array[String],
+                fieldTypes: Array[DataType],
+                partitionColumns: Array[String]) = {
+    val copy = super.configure(fieldNames, fieldTypes).asInstanceOf[ParquetTableSink]
+    copy.partitionColumns = partitionColumns
+    copy
+  }
 
   /** Emits the BoundedStream. */
   override def emitBoundedStream(boundedStream: DataStream[BaseRow],
@@ -77,6 +87,8 @@ class ParquetTableSink(
 
     boundedStream.writeUsingOutputFormat(new RowParquetOutputFormat(
       dir, getFieldTypes.map(_.toInternalType), getFieldNames, compression,
-      blockSize, enableDictionary)).name("parquet sink: " + dir)
+      blockSize, enableDictionary, this.partitionColumns)).name("parquet sink: " + dir)
   }
+
+
 }

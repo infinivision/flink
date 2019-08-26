@@ -41,8 +41,12 @@ public class ParquetOptions {
 	public static final ConfigOption<String> COMPRESSION_CODEC_NAME = key("compressionCodecName".toLowerCase())
 		.defaultValue("SNAPPY");
 
+	public static final ConfigOption<String> PARTITION = key("partition".toLowerCase())
+		.defaultValue("");
+
 	public static final List<String> SUPPORTED_KEYS = Arrays.asList(FILE_PATH.key(), ENUMERATE_NESTED_FILES.key(),
-		WRITE_MODE.key(), COMPRESSION_CODEC_NAME.key());
+		WRITE_MODE.key(), COMPRESSION_CODEC_NAME.key(), PARTITION.key());
 
 	public static final String PARAMS_HELP_MSG = String.format("required params:%s", FILE_PATH);
+
 }
