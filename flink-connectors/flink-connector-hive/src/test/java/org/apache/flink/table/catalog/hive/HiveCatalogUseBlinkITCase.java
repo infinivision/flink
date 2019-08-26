@@ -34,6 +34,8 @@ import org.apache.flink.table.descriptors.OldCsv;
 import org.apache.flink.table.functions.hive.util.TestHiveGenericUDF;
 import org.apache.flink.table.functions.hive.util.TestHiveSimpleUDF;
 import org.apache.flink.table.functions.hive.util.TestHiveUDTF;
+import org.apache.flink.table.planner.runtime.utils.BatchTestBase;
+import org.apache.flink.test.util.AbstractTestBase;
 import org.apache.flink.util.FileUtils;
 
 import com.klarna.hiverunner.HiveShell;
@@ -65,7 +67,7 @@ import static java.lang.String.format;
  * TODO: move to flink-connector-hive-test end-to-end test module once it's setup
  */
 @RunWith(FlinkStandaloneHiveRunner.class)
-public class HiveCatalogUseBlinkITCase {
+public class HiveCatalogUseBlinkITCase extends AbstractTestBase {
 
 	@HiveSQL(files = {})
 	private static HiveShell hiveShell;
@@ -97,6 +99,8 @@ public class HiveCatalogUseBlinkITCase {
 		TableEnvironment tEnv = TableEnvironment.create(
 				EnvironmentSettings.newInstance().useBlinkPlanner().inBatchMode().build());
 
+		BatchTestBase.configForMiniCluster(tEnv.getConfig());
+
 		tEnv.registerCatalog("myhive", hiveCatalog);
 		tEnv.useCatalog("myhive");
 
@@ -115,7 +119,7 @@ public class HiveCatalogUseBlinkITCase {
 						schema)
 						.withFormat(format)
 						.inAppendMode()
-						.withComment(null)
+						.withComment("Comment.")
 						.build();
 
 		Path p = Paths.get(tempFolder.newFolder().getAbsolutePath(), "test.csv");
@@ -138,7 +142,7 @@ public class HiveCatalogUseBlinkITCase {
 						sinkSchema)
 						.withFormat(sinkFormat)
 						.inAppendMode()
-						.withComment(null)
+						.withComment("Comment.")
 						.build();
 
 		hiveCatalog.createTable(
